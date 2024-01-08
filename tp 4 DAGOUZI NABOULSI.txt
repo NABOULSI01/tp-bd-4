@@ -1,0 +1,192 @@
+-------LDD-------------------
+1-
+Alter session set"_ORACLE_SCRIPT"=True;
+create user tp4 identified by tp4;
+GRANT ALL PRIVILEGES TO tp4;
+Alter session set"_ORACLE_SCRIPT"=False;
+Connect tp4;
+
+2-SQL> Create table USINE (
+  2  NU varchar2(20) PRIMARY KEY,
+  3  NomU varchar2(20),
+  4  Ville varchar2(20));
+
+Table crÚÚe.
+
+SQL> Create table PRODUIT (
+  2  NP varchar2(20) PRIMARY KEY,
+  3  NomP varchar2(20),
+  4  Couleur varchar2(20),
+  5  Poids number);
+
+Table crÚÚe.
+
+SQL> Create table FOURNISSEUR (
+  2  NF varchar2(20) PRIMARY KEY,
+  3  NomF varchar2(20),
+  4  Statut varchar2(20),
+  5  Ville varchar2(20));
+
+Table crÚÚe.
+
+
+
+-- SQL> Create table LIVRAISON (
+  2  NU varchar2(20),
+  3  NP varchar2(20),
+  4  NF varchar2(20),
+  5  Quantite number,
+  6  Constraint pk_NU_NP_NF PRIMARY KEY(NU, NP, NF),
+  7  Constraint fk_NU foreign key(NU) references USINE(NU),
+  8  Constraint fk_NP foreign key(NP) references PRODUIT(NP),
+  9  Constraint fk_NF foreign key(NF) references FOURNISSEUR(NF));
+
+-- Remplissage de la table Livraison
+SQL> Insert into USINE (NU , NomU , Ville) Values ( '1' ,'FARINA', 'AGADIR');
+
+1 ligne crÚÚe.
+
+SQL> Insert into USINE (NU , NomU , Ville) Values ( '2' ,'CENTRALE', 'GUELMIM');
+
+1 ligne crÚÚe.
+
+SQL> Insert into USINE (NU , NomU , Ville) Values ( '3' ,'CIEL', 'AGADIR');
+
+1 ligne crÚÚe.
+
+
+*************
+
+SQL> Insert into PRODUIT (NP , NomP , Couleur , Poids) Values ( '1' ,'MSMEN', 'BLANC' , 2.5);
+
+1 ligne crÚÚe.
+
+SQL> Insert into PRODUIT (NP , NomP , Couleur , Poids) Values ( '2' ,'LAIT', 'BLEU' , 4);
+
+1 ligne crÚÚe.
+
+SQL> Insert into PRODUIT (NP , NomP , Couleur , Poids) Values ( '3' ,'EAU', 'GREY' , 5);
+
+1 ligne crÚÚe.
+
+********************
+
+SQL> Insert into FOURNISSEUR (NF , NomF , Statut , Ville) Values ( '1' ,'ALI', 'ACTIF' , 'CASA');
+
+1 ligne crÚÚe.
+
+SQL> Insert into FOURNISSEUR (NF , NomF , Statut , Ville) Values ( '2' ,'MOHAMED', 'ACTIF' , 'AGADIR');
+
+1 ligne crÚÚe.
+
+SQL> Insert into FOURNISSEUR (NF , NomF , Statut , Ville) Values ( '3' ,'MAHER', 'INACTIF' , 'TAROUDANT');
+
+1 ligne crÚÚe.
+
+*********
+
+SQL> Insert into LIVRAISON (NU , NP , NF , Quantite) Values ( '1' ,'1', '3' , 20);
+
+1 ligne crÚÚe.
+
+SQL> Insert into LIVRAISON (NU , NP , NF , Quantite) Values ( '2' ,'2', '1' , 40);
+
+1 ligne crÚÚe.
+
+SQL> Insert into LIVRAISON (NU , NP , NF , Quantite) Values ( '3' ,'3', '2' , 10);
+
+1 ligne crÚÚe.
+
+------LID-----------------
+4-
+SQL> Select UPPER(NomU) ,UPPER(Ville)
+  2  FROM USINE;
+
+5-
+SQL> Select NU , NOMU , VILLE
+  2  FROM USINE
+  3  WHERE NOMU LIKE '%PLAST%';
+
+6-
+SELECT DISTINCT NF
+FROM Livraison
+WHERE NU = 1;
+
+7-
+Select NomF
+  2  FROM LIVRAISON
+  3  JOIN FOURNISSEUR ON LIVRAISON.NF = FOURNISSEUR.NF
+  4  WHERE NU ='1' AND NP='1';
+8-
+SELECT DISTINCT Livraison.NF
+FROM Livraison
+WHERE Livraison.NU IN (1, 2);
+
+9-
+
+SQL> SELECT NU
+  2  FROM LIVRAISON
+  3  WHERE NF!='1';
+10-
+SELECT DISTINCT Livraison.NU
+FROM Livraison
+WHERE Livraison.NF = 3;
+
+11-
+SQL> SELECT NF
+  2  FROM FOURNISSEUR
+  3  WHERE NF IN(
+  4  SELECT NP
+  5  FROM LIVRAISON
+  6  WHERE NF = 1);
+12-
+SQL> SELECT DISTINCT NU
+  2      FROM LIVRAISON
+  3      WHERE NF =3
+  4  AND NU NOT IN(
+  5  SELECT NU
+  6  FROM LIVRAISON
+  7  WHERE NF<>3);
+
+13-
+SELECT Fournisseur.NF, Fournisseur.NomF, COUNT(DISTINCT Livraison.NU) AS NombreUsinesApprovisionnees
+FROM Fournisseur
+LEFT JOIN Livraison ON Fournisseur.NF = Livraison.NF
+GROUP BY Fournisseur.NF, Fournisseur.NomF
+ORDER BY NombreUsinesApprovisionnees DESC;
+
+14-
+SELECT Fournisseur.NomF
+FROM Fournisseur
+LEFT JOIN Livraison ON Fournisseur.NF = Livraison.NF
+GROUP BY Fournisseur.NF, Fournisseur.NomF
+HAVING COUNT(DISTINCT Livraison.NU) > 4;
+
+15-
+SQL> SELECT Produit.NomP
+  2  FROM Produit
+  3  JOIN Livraison ON Produit.NP = Livraison.NP
+  4  JOIN Usine ON Livraison.NU = Usine.NU
+  5  WHERE Usine.Ville = 'Agadir'
+  6  GROUP BY Produit.NP, Produit.NomP
+  7  HAVING COUNT(DISTINCT Livraison.NU) > 4;
+
+16-
+SQL> SELECT UPPER(SUBSTR(NomP, 1, 1)) AS InitialeProduit, SUM(quantite) AS QuantiteTotaleFournie
+  2  FROM Produit
+  3  JOIN Livraison ON Produit.NP = Livraison.NP
+  4  GROUP BY UPPER(SUBSTR(NomP, 1, 1))
+  5  ORDER BY InitialeProduit;
+
+17-
+SQL> SELECT NomF
+  2  FROM Fournisseur
+  3  WHERE NF IN (
+  4      SELECT DISTINCT NF
+  5      FROM Livraison
+  6      GROUP BY NF
+  7      HAVING COUNT(DISTINCT NU) = (SELECT COUNT(DISTINCT NU) FROM Usine)
+  8  )
+  9  ORDER BY NomF;
+
+
